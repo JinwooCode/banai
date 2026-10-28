@@ -10,6 +10,8 @@ import {
 } from './api/client.js';
 import { createStore } from './state/store.js';
 import { createUnsavedTracker } from './state/unsaved.js';
+import { createTour } from './tour/tour.js';
+import { tourStrings } from './tour/steps.js';
 import { PRESETS, buildPreset } from './domain/presets.js';
 import { PRESET_STRINGS, createPresetsDialog } from './entry/presetsDialog.js';
 import { mountPanel } from './editor/panel.js';
@@ -103,6 +105,46 @@ function bindUnsaved(unsaved) {
     event.preventDefault();
     event.returnValue = ''; // older browsers need it to show the prompt
   });
+}
+
+/** Listen to `types` on `node` until the returned function is called. */
+function listen(node, types, handler) {
+  types.forEach((type) => node.addEventListener(type, handler));
+  return () => types.forEach((type) => node.removeEventListener(type, handler));
+}
+
+/** What counts as "tried it" for each interactive tour step (each returns an unsubscribe). */
+function tourTries(store, viewer, presetOpened) {
+  return {
+    // A suggestion only fills the composer; typing counts too. Nothing is sent.
+    chat: (done) => listen(document.getElementById('chat-panel'), ['input', 'click'], (event) => {
+      if (event.type === 'input' || event.target.closest('.suggestion')) done();
+    }),
+    // Picking a part or changing the design.
+    manual: (done) => {
+      const start = store.getState();
+      return store.subscribe(({ design, selection }) => {
+        if (design !== start.design || selection !== start.selection) done();
+      });
+    },
+    // A real drag: the camera turned by more than about 12 degrees.
+    rotate: (done) => {
+      const { controls } = viewer;
+      let from = null;
+      const off = [
+        listen(controls, ['start'], () => { from = controls.getAzimuthalAngle(); }),
+        listen(controls, ['change'], () => {
+          if (from !== null && Math.abs(controls.getAzimuthalAngle() - from) > 0.2) done();
+        }),
+      ];
+      return () => off.forEach((stop) => stop());
+    },
+    // Only once a template is actually opened (from the dialog or the chat), not on the button alone.
+    examples: (done) => {
+      presetOpened.add(done);
+      return () => presetOpened.delete(done);
+    },
+  };
 }
 
 function bindDialogs({ storage, onSave, link, auth, language }) {
@@ -216,10 +258,12 @@ async function boot() {
   }
 
   // A template replaces the current design and brings its decorative room (viewer only).
+  const presetOpened = new Set(); // listeners: the tour's "try it" step
   const openPreset = (presetId) => {
     const { catalog, revision } = store.getState();
     store.replaceDesign(buildPreset(presetId, catalog), revision + 1);
     store.setBackdrop(PRESETS.find((preset) => preset.id === presetId).backdrop);
+    presetOpened.forEach((listener) => listener(presetId));
   };
   const examples = createPresetsDialog({ onChoose: openPreset, getLanguage: language.get });
   const examplesButton = document.getElementById('open-presets');
@@ -231,7 +275,22 @@ async function boot() {
   labelExamples(language.get());
   language.subscribe(labelExamples);
 
-  if (session) return; // reopened from a link: straight into the editor
+  // First-visit tour: once, after the start screen (or straight away when opened from a link).
+  const tour = createTour({ getLanguage: language.get, tryIts: tourTries(store, viewer, presetOpened) });
+  const tourButton = document.getElementById('open-tour');
+  tourButton.addEventListener('click', () => tour.start());
+  const labelTour = (lang) => {
+    tourButton.setAttribute('aria-label', tourStrings(lang).label);
+    tourButton.title = tourStrings(lang).label;
+    tourButton.lang = lang;
+  };
+  labelTour(language.get());
+  language.subscribe(labelTour);
+
+  if (session) {
+    tour.startIfFirstVisit();
+    return; // reopened from a link: straight into the editor
+  }
   mountStartScreen({
     session: auth,
     getLanguage: language.get,
@@ -244,6 +303,7 @@ async function boot() {
       // one the properties panel, so keyboard focus never falls out of the page when the modal closes.
       if (entry.focusesChat) chat.focus(entry.id);
       else document.getElementById('properties-panel').focus();
+      tour.startIfFirstVisit(); // focus returns here when the tour ends
     },
   });
 }

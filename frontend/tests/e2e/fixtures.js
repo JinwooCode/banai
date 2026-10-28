@@ -4,7 +4,10 @@ import { test as base, expect } from '@playwright/test';
 // expected HTTP error can allow exactly that console line via `test.use({ allowedConsoleErrors })`.
 export const test = base.extend({
   allowedConsoleErrors: [[], { option: true }],
-  page: async ({ page, allowedConsoleErrors }, use) => {
+  // The first-visit tour would cover the page: mark it as seen, except in the tour's own tests.
+  showTour: [false, { option: true }],
+  page: async ({ page, allowedConsoleErrors, showTour }, use) => {
+    if (!showTour) await page.addInitScript(() => { try { localStorage.setItem('banai.tour.v1', 'done'); } catch { /* blocked */ } });
     const problems = [];
     page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
     page.on('console', (message) => {
