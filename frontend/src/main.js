@@ -9,6 +9,7 @@ import {
   applyProposal, createSavedDesign, getCatalog, getDefaultDesign, getHealth, getSavedDesign, sendChat, updateSavedDesign,
 } from './api/client.js';
 import { createStore } from './state/store.js';
+import { createUnsavedTracker } from './state/unsaved.js';
 import { PRESETS, buildPreset } from './domain/presets.js';
 import { PRESET_STRINGS, createPresetsDialog } from './entry/presetsDialog.js';
 import { mountPanel } from './editor/panel.js';
@@ -65,7 +66,7 @@ async function loadInitial(language) {
   return { initial: await getDefaultDesign(), session: null };
 }
 
-function createSaver(store, language, initialSession, auth) {
+function createSaver(store, language, initialSession, auth, onSaved) {
   let session = initialSession;
   return async () => {
     const { design } = store.getState();
@@ -79,8 +80,29 @@ function createSaver(store, language, initialSession, auth) {
       session = { designId: created.designId, token: created.accessToken, revision: created.revision };
     }
     window.history.replaceState(null, '', shareHash(session));
+    onSaved(design); // the design sent, not the current one: edits made during the save stay unsaved
     return window.location.href;
   };
+}
+
+/**
+ * Unsaved changes since the last save to the link: a small dot on Save (plus hidden text for screen
+ * readers), and the browser's "Leave site?" prompt before closing or reloading.
+ */
+function bindUnsaved(unsaved) {
+  const dot = document.getElementById('save-dot');
+  const label = document.getElementById('save-unsaved');
+  const show = (dirty) => {
+    dot.hidden = !dirty;
+    label.hidden = !dirty;
+  };
+  unsaved.subscribe(show);
+  show(unsaved.isDirty());
+  window.addEventListener('beforeunload', (event) => {
+    if (!unsaved.isDirty()) return;
+    event.preventDefault();
+    event.returnValue = ''; // older browsers need it to show the prompt
+  });
 }
 
 function bindDialogs({ storage, onSave, link, auth, language }) {
@@ -133,6 +155,8 @@ async function boot() {
   await auth.restore(language.get()); // a previous visit's login, if any
   // Validates the server data before anything is rendered (throws on invalid data).
   const store = createStore({ design: initial.design, revision: initial.revision, catalog });
+  const unsaved = createUnsavedTracker(store);
+  bindUnsaved(unsaved);
   const viewer = createViewer(document.getElementById('viewer'), store);
   bindInteriorToggle(store);
   bindSkipLink();
@@ -144,7 +168,7 @@ async function boot() {
   mountPanel(document.getElementById('properties-content'), store, { onExport: exporter.open });
   bindDialogs({
     storage: health?.data.storage === true,
-    onSave: createSaver(store, language, session, auth),
+    onSave: createSaver(store, language, session, auth, unsaved.markSaved),
     link: session ? window.location.href : '',
     auth,
     language,
@@ -215,6 +239,7 @@ async function boot() {
       // The basic wardrobe is already loaded (revision 1); only its room is added.
       if (presetId === 'basic') store.setBackdrop(PRESETS[0].backdrop);
       else if (presetId) openPreset(presetId);
+      unsaved.reset(); // the start screen is a fresh start: nothing to save yet
       // All three entry points open the same editor; the chat ones focus the composer, the manual
       // one the properties panel, so keyboard focus never falls out of the page when the modal closes.
       if (entry.focusesChat) chat.focus(entry.id);
