@@ -250,7 +250,6 @@ export function createAssembly(container, design, catalog, {
     setDoorsOpen(open) {
       doors.forced = open ? 1 : 0;
     },
-    doorsOpen: () => (doors.forced ?? doors.target) === 1,
     /** Recolour the doors, fading from the current colour. */
     setDoorColour(hex) {
       if (doorColour) doorColour.set(hex);

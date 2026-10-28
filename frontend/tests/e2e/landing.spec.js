@@ -38,6 +38,16 @@ test.describe('opening page', () => {
     await expect(peek).toHaveText('הציצו פנימה');
   });
 
+  test('"Peek inside" opens the doors even during the automatic first peek', async ({ page }) => {
+    await page.goto('/');
+    await page.locator('.landing__chip--done').waitFor({ timeout: 15000 });
+    await page.waitForTimeout(1200); // the doors are now open on their own
+    const peek = page.getByTestId('landing-peek');
+    await peek.click();
+    await expect(peek).toHaveAttribute('aria-pressed', 'true');
+    await expect(peek).toHaveText('סגרו דלתות');
+  });
+
   test('"How it works" and the six templates, drawn from their designs', async ({ page }) => {
     await page.goto('/');
     await page.getByTestId('landing-how').click();

@@ -244,7 +244,9 @@ export function mountLanding({ catalog, getLanguage = () => 'he', onStart, stora
     peek.setAttribute('aria-pressed', 'false');
   }, 'btn--ghost', 'landing-replay');
   const peek = cta(s.peek, () => {
-    const open = !assembly?.doorsOpen();
+    // Follow the button's own state, not the doors': during the automatic first peek the doors are
+    // already open, and "Peek inside" must still mean open (and keep them open).
+    const open = peek.getAttribute('aria-pressed') !== 'true';
     assembly?.setDoorsOpen(open);
     peek.textContent = open ? s.close : s.peek;
     peek.setAttribute('aria-pressed', String(open));
