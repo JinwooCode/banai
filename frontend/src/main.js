@@ -9,6 +9,8 @@ import {
   applyProposal, createSavedDesign, getCatalog, getDefaultDesign, getHealth, getSavedDesign, sendChat, updateSavedDesign,
 } from './api/client.js';
 import { createStore } from './state/store.js';
+import { PRESETS, buildPreset } from './domain/presets.js';
+import { PRESET_STRINGS, createPresetsDialog } from './entry/presetsDialog.js';
 import { mountPanel } from './editor/panel.js';
 import { createViewer } from './viewer/viewer.js';
 import { renderSnapshot } from './viewer/snapshot.js';
@@ -180,6 +182,7 @@ async function boot() {
   };
   const chat = mountChat(document.getElementById('chat-panel'), {
     model: chatModel, onConfirm: confirmProposal, language, onExport: exporter.open,
+    onOpenPreset: (presetId) => openPreset(presetId),
   });
   // A manual edit changes the revision, which may turn a pending proposal stale.
   store.subscribe(() => chat.refresh());
@@ -188,11 +191,30 @@ async function boot() {
     window.__banai = Object.freeze({ store, viewer, chat: chatModel });
   }
 
+  // A template replaces the current design and brings its decorative room (viewer only).
+  const openPreset = (presetId) => {
+    const { catalog, revision } = store.getState();
+    store.replaceDesign(buildPreset(presetId, catalog), revision + 1);
+    store.setBackdrop(PRESETS.find((preset) => preset.id === presetId).backdrop);
+  };
+  const examples = createPresetsDialog({ onChoose: openPreset, getLanguage: language.get });
+  const examplesButton = document.getElementById('open-presets');
+  examplesButton.addEventListener('click', examples.open);
+  const labelExamples = (lang) => {
+    examplesButton.textContent = (PRESET_STRINGS[lang] ?? PRESET_STRINGS.he).button;
+    examplesButton.lang = lang;
+  };
+  labelExamples(language.get());
+  language.subscribe(labelExamples);
+
   if (session) return; // reopened from a link: straight into the editor
   mountStartScreen({
     session: auth,
     getLanguage: language.get,
-    onChoose: (entry) => {
+    onChoose: (entry, presetId) => {
+      // The basic wardrobe is already loaded (revision 1); only its room is added.
+      if (presetId === 'basic') store.setBackdrop(PRESETS[0].backdrop);
+      else if (presetId) openPreset(presetId);
       // All three entry points open the same editor; the chat ones focus the composer, the manual
       // one the properties panel, so keyboard focus never falls out of the page when the modal closes.
       if (entry.focusesChat) chat.focus(entry.id);

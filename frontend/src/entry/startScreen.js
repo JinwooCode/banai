@@ -4,9 +4,21 @@ import { el, button } from '../editor/fields.js';
 import { createAuthForm } from '../auth/authDialog.js';
 import { icon } from '../ui/icons.js';
 import { createLogo } from '../ui/logo.js';
+import { PRESETS, presetLabel } from '../domain/presets.js';
 import { ENTRY_POINTS } from './entryPoints.js';
 
 export const START_FOOTNOTE = 'Designs are illustrative previews and are not manufacturing drawings.';
+
+function presetPicker(language) {
+  const select = el('select', { className: 'entry-card__select', attrs: { id: 'entry-preset', lang: language, dir: 'auto' } },
+    PRESETS.map((preset) => el('option', { text: presetLabel(preset, language), attrs: { value: preset.id } })));
+  select.dataset.testid = 'entry-preset';
+  const label = el('label', { className: 'entry-card__field', attrs: { for: 'entry-preset' } }, [
+    el('span', { text: 'Template' }),
+    select,
+  ]);
+  return { label, select };
+}
 
 export function mountStartScreen({ onChoose, session = null, getLanguage = () => 'he' }) {
   const cards = ENTRY_POINTS.map((entry) => {
@@ -15,16 +27,18 @@ export function mountStartScreen({ onChoose, session = null, getLanguage = () =>
       icon('arrow', { size: 18 }),
     ]);
     action.dataset.testid = `entry-${entry.id}`;
+    const picker = entry.choosesPreset ? presetPicker(getLanguage()) : null;
     const card = el('article', { className: 'entry-card' }, [
       el('span', { className: 'entry-card__icon' }, [icon(entry.icon, { size: 24 })]),
       el('h2', { className: 'entry-card__title', text: entry.title }),
       el('p', { className: 'entry-card__text', text: entry.description }),
+      ...(picker ? [picker.label] : []),
       action,
     ]);
     action.addEventListener('click', () => {
       dialog.close();
       dialog.remove();
-      onChoose(entry);
+      onChoose(entry, picker?.select.value ?? null);
     });
     return card;
   });
