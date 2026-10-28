@@ -1,0 +1,401 @@
+/* Opening page (src/landing/landing.js). A full-screen, scrollable layer above the app. */
+body.has-landing { overflow: hidden; }
+
+.landing {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(238, 138, 84, 0.22), transparent 60%),
+    radial-gradient(900px 500px at -10% 30%, rgba(242, 193, 78, 0.16), transparent 60%),
+    linear-gradient(180deg, #fff8f4 0%, #fdf3ec 55%, #f8ece3 100%);
+  color: var(--md-sys-color-on-surface);
+  font: var(--md-sys-typescale-body-large);
+  animation: landing-in 500ms ease both;
+}
+.landing--leaving { animation: landing-out 380ms ease forwards; }
+.landing[lang='he'] { --landing-display: 'Rubik', var(--md-ref-typeface-display); font-family: 'Rubik', var(--md-ref-typeface-body); }
+.landing { --landing-display: var(--md-ref-typeface-display); }
+
+/* Bar */
+.landing__bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px clamp(16px, 4vw, 56px);
+  background: rgba(255, 248, 244, 0.72);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(180, 83, 42, 0.1);
+}
+.landing__bar .logo__word { font-size: 28px; }
+
+/* Hero */
+.landing__hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(16px, 4vw, 64px);
+  min-height: calc(100vh - 72px);
+  padding: clamp(24px, 4vw, 48px) clamp(16px, 4vw, 56px) 48px;
+}
+.landing__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
+  padding: 6px 14px;
+  border: 1px solid rgba(180, 83, 42, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  position: relative;
+  overflow: hidden;
+  color: var(--md-sys-color-primary);
+  font: 500 14px/20px var(--landing-display);
+  letter-spacing: 0.01em;
+  animation: rise 700ms 120ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.landing__eyebrow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.9) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: shine 3.6s 1.6s ease-in-out infinite;
+}
+.landing__eyebrow::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #e9814d; box-shadow: 0 0 0 4px rgba(233, 129, 77, 0.2); }
+.landing__slogan {
+  margin: 0 0 22px;
+  font: 900 clamp(42px, 6.2vw, 84px)/1.02 var(--landing-display);
+  letter-spacing: -0.03em;
+  color: #2a1a12;
+  text-wrap: balance;
+}
+.landing[lang='en'] .landing__slogan { font-weight: 800; letter-spacing: -0.045em; }
+.landing__word {
+  display: inline-block;
+  animation: word-in 900ms calc(260ms + var(--i, 0) * 85ms) cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+/* The pun: a slowly moving warm gradient fill and a hand-drawn underline that draws itself. */
+.landing__mark { position: relative; display: inline-block; white-space: nowrap; }
+.landing__mark-text {
+  background: linear-gradient(100deg, #b4532a 0%, #ee8a54 30%, #f2c14e 50%, #ee8a54 70%, #b4532a 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s 1.4s ease-in-out infinite;
+}
+.landing__swoosh { position: absolute; inset-inline: -2%; bottom: -0.16em; width: 104%; height: 0.32em; overflow: visible; }
+.landing__swoosh path {
+  fill: none;
+  stroke: #f2a24e;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 900ms 1300ms cubic-bezier(0.6, 0, 0.2, 1) forwards;
+}
+
+.landing__lead {
+  max-width: 34em;
+  margin: 0 0 28px;
+  color: #5c4436;
+  font-size: clamp(17px, 1.45vw, 20px);
+  font-weight: 400;
+  line-height: 1.65;
+  animation: rise 800ms 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.landing__ctas { display: flex; flex-wrap: wrap; gap: 12px; animation: rise 800ms 460ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.landing__ctas .btn { min-height: 52px; padding-inline: 26px; font-size: 16px; }
+.landing__start { box-shadow: 0 10px 24px rgba(156, 69, 32, 0.32); }
+.landing__start:hover { transform: translateY(-2px); }
+
+.landing__visual { position: relative; align-self: stretch; min-height: 420px; }
+.landing__stage {
+  position: absolute;
+  inset: 0;
+  border-radius: 32px;
+  background: radial-gradient(closest-side at 50% 60%, rgba(255, 255, 255, 0.95), rgba(255, 244, 236, 0.4) 70%, transparent);
+}
+.landing__stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Fade the canvas edges so the floor shadow never ends in a hard line. */
+  -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent);
+  mask-image: radial-gradient(closest-side, #000 72%, transparent);
+}
+.landing__stage--static { background: radial-gradient(closest-side, #fff, transparent); }
+/* Under the hero wardrobe: door colour swatches, peek inside, build again. */
+.landing__controls {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid rgba(180, 83, 42, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(90, 45, 20, 0.14);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  animation: rise 700ms 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.landing__controls .btn { min-height: 36px; padding-inline: 14px; font-size: 13px; }
+.landing__swatches { display: flex; gap: 6px; padding-inline-end: 8px; border-inline-end: 1px solid rgba(180, 83, 42, 0.16); }
+.landing__swatch {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px rgba(60, 35, 15, 0.25), 0 2px 6px rgba(60, 35, 15, 0.2);
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.2, 0.9, 0.3, 1.4), box-shadow 180ms ease;
+}
+.landing__swatch:hover { transform: scale(1.12); }
+.landing__swatch[aria-pressed='true'] { box-shadow: 0 0 0 2px #9c4520, 0 2px 8px rgba(156, 69, 32, 0.35); transform: scale(1.08); }
+.landing__swatch:focus-visible { outline: var(--focus-outline); outline-offset: 3px; }
+
+/* The way in (after "בואו נעצב"): the wardrobe's stage grows to fill the screen while the copy,
+   the controls and the rest of the page fade away. */
+.landing--zooming { overflow: hidden; }
+.landing--zooming .landing__bar, .landing--zooming .landing__copy, .landing--zooming .landing__band,
+.landing--zooming .landing__section, .landing--zooming .landing__footer,
+.landing--zooming .landing__chips, .landing--zooming .landing__controls, .landing--zooming .landing__dims-layer,
+.landing--zooming .landing__blueprint { opacity: 0; transition: opacity 320ms ease; }
+.landing__visual { transition: transform 700ms cubic-bezier(0.7, 0, 0.2, 1); }
+.landing--zooming .landing__visual { z-index: 5; transform: var(--fly); }
+
+/* A soft light that follows the cursor across the hero. */
+.landing__hero { position: relative; }
+.landing__glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(520px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 196, 140, 0.32), transparent 60%);
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+.landing__glow--on { opacity: 1; }
+
+/* Sections */
+.landing__section { padding: 72px clamp(16px, 4vw, 56px); }
+.landing__how { background: rgba(255, 255, 255, 0.55); border-block: 1px solid rgba(180, 83, 42, 0.08); }
+.landing__h2 { margin: 0 0 36px; text-align: center; font: 800 clamp(30px, 3.4vw, 46px)/1.1 var(--landing-display); letter-spacing: -0.03em; }
+.landing__steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; padding: 0; list-style: none; }
+.landing__step { position: relative; padding: 28px 24px 24px; border: 1px solid rgba(180, 83, 42, 0.12); border-radius: 24px; background: #fff; box-shadow: 0 12px 30px rgba(120, 60, 30, 0.07); }
+.landing__num {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ee8a54, #9c4520);
+  color: #fff;
+  font: 800 20px/1 var(--md-ref-typeface-display);
+  box-shadow: 0 6px 14px rgba(156, 69, 32, 0.3);
+}
+.landing__step-title { margin: 0 0 8px; font: 800 22px/1.25 var(--landing-display); }
+.landing__step-text { margin: 0; color: var(--md-sys-color-on-surface-variant); line-height: 1.6; }
+
+.landing__cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; max-width: 1040px; margin: 0 auto; padding: 0; list-style: none; }
+.landing__card {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid rgba(180, 83, 42, 0.12);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(120, 60, 30, 0.06);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 220ms ease, border-color 220ms ease;
+}
+.landing__card:hover { transform: translateY(-6px); border-color: rgba(180, 83, 42, 0.35); box-shadow: 0 18px 36px rgba(120, 60, 30, 0.14); }
+.landing__drawing { display: grid; place-items: end center; height: 190px; margin-bottom: 8px; padding: 12px; border-radius: 14px; background: linear-gradient(180deg, #f7f1ea, #efe5da); }
+.elevation { width: 100%; height: 100%; filter: drop-shadow(0 6px 8px rgba(60, 35, 15, 0.18)); }
+.landing__card-title { margin: 0; font: 800 17px/1.3 var(--landing-display); }
+.landing__card-size { margin: 0 0 8px; color: var(--md-sys-color-on-surface-variant); font: var(--md-sys-typescale-body-medium); text-align: start; }
+
+.landing__footer { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; padding: 28px 16px 40px; color: var(--md-sys-color-on-surface-variant); font: var(--md-sys-typescale-body-medium); }
+.landing__footer p { margin: 0; }
+.landing__footer a { color: inherit; }
+
+/* Scroll reveal */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 700ms ease var(--reveal-delay, 0ms), transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1) var(--reveal-delay, 0ms); }
+.reveal--in { opacity: 1; transform: none; }
+
+/* The new logo, animated on the landing bar: the B's parts slot in, then the sparkle twinkles. */
+.landing__bar .logo__stem, .landing__bar .logo__bowl, .landing__bar .logo__shelf, .landing__bar .logo__pull { transform-box: fill-box; transform-origin: center bottom; animation: logo-slot 600ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+.landing__bar .logo__bowl--top { animation-delay: 120ms; }
+.landing__bar .logo__bowl--bottom { animation-delay: 220ms; }
+.landing__bar .logo__shelf, .landing__bar .logo__pull { animation-delay: 380ms; }
+.landing__bar .logo__spark { transform-box: fill-box; transform-origin: center; animation: twinkle 2.8s 700ms ease-in-out infinite; }
+
+@keyframes landing-in { from { opacity: 0; } }
+@keyframes landing-out { to { opacity: 0; transform: scale(1.02); } }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } }
+@keyframes word-in { from { opacity: 0; transform: translateY(0.45em) rotate(2deg); filter: blur(10px); } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes shimmer { 50% { background-position: 100% 0; } }
+@keyframes shine { 60%, 100% { transform: translateX(120%); } }
+@keyframes logo-slot { from { opacity: 0; transform: translateY(6px) scaleY(0.4); } }
+@keyframes twinkle { 0%, 70%, 100% { transform: scale(1) rotate(0); } 80% { transform: scale(1.35) rotate(25deg); } }
+
+@media (max-width: 860px) {
+  .landing__hero { grid-template-columns: 1fr; min-height: auto; }
+  .landing__visual { min-height: 340px; order: -1; }
+  .landing__steps { grid-template-columns: 1fr; }
+  .landing__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .landing__cards { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing, .landing--leaving, .landing__eyebrow, .landing__slogan, .landing__lead, .landing__ctas,
+  .landing__bar .logo__stem, .landing__bar .logo__bowl, .landing__bar .logo__shelf, .landing__bar .logo__pull, .landing__bar .logo__spark { animation: none; }
+  .landing__word, .landing__mark-text, .landing__eyebrow::after { animation: none; }
+  .landing__swoosh path { animation: none; stroke-dashoffset: 0; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .landing { scroll-behavior: auto; }
+}
+
+/* Hero, part two: blueprint grid, AI build commentary, measurement lines, CTA shine. */
+.landing__blueprint {
+  position: absolute;
+  inset: 4% 2%;
+  border-radius: 32px;
+  background-image:
+    linear-gradient(rgba(156, 69, 32, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(156, 69, 32, 0.09) 1px, transparent 1px),
+    linear-gradient(rgba(156, 69, 32, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(156, 69, 32, 0.045) 1px, transparent 1px);
+  background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px;
+  -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent);
+  mask-image: radial-gradient(closest-side, #000 55%, transparent);
+  animation: blueprint-in 1.4s ease both;
+}
+
+.landing__chips {
+  position: absolute;
+  top: 6%;
+  inset-inline-start: 4%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+.landing__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 8px 14px;
+  border: 1px solid rgba(180, 83, 42, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 20px rgba(90, 45, 20, 0.12);
+  color: #4a3226;
+  font: 500 14px/20px var(--landing-display);
+  animation: chip-in 420ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+.landing__chip::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ee8a54, #b4532a);
+  box-shadow: 0 0 0 3px rgba(238, 138, 84, 0.2);
+  animation: tour-pulse 1.2s ease-in-out infinite;
+}
+.landing__chip--done { border-color: rgba(46, 125, 60, 0.3); background: #ecf7ee; color: #1f5f2c; font-weight: 800; }
+.landing__chip--done::before { content: '\2713'; display: grid; place-items: center; width: 18px; height: 18px; background: #2e7d3c; box-shadow: none; color: #fff; font-size: 11px; animation: none; }
+
+.landing__dims-layer { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 500ms ease; }
+.landing__dims-layer--on { opacity: 1; }
+.landing__dims { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.landing__dim-line { stroke: #9c4520; stroke-width: 1.5; stroke-dasharray: 600; stroke-dashoffset: 600; }
+.landing__dim-tick { stroke: #9c4520; stroke-width: 1.5; }
+.landing__dims-layer--on .landing__dim-line { animation: dim-draw 900ms cubic-bezier(0.6, 0, 0.2, 1) forwards; }
+.landing__dim-label {
+  position: absolute;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: #9c4520;
+  color: #fff;
+  font: 700 12px/16px var(--md-ref-typeface-display);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 4px 10px rgba(156, 69, 32, 0.3);
+  direction: ltr;
+}
+
+/* The main button: a slow shine passes across it. */
+.landing__start { position: relative; overflow: hidden; }
+.landing__start::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: shine 3.2s 2.4s ease-in-out infinite;
+}
+
+/* Moving warm light behind the whole page. */
+.landing::before {
+  content: '';
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  background:
+    radial-gradient(40% 35% at 70% 20%, rgba(238, 138, 84, 0.22), transparent 70%),
+    radial-gradient(35% 30% at 20% 70%, rgba(242, 193, 78, 0.18), transparent 70%);
+  animation: aurora 18s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.landing { isolation: isolate; }
+
+/* Feature band: an endless sideways scroll. */
+.landing__band {
+  overflow: hidden;
+  padding: 18px 0;
+  direction: ltr; /* the loop math is left-to-right; each item keeps its own text direction */
+  background: #2a1a12;
+  color: #fbe9dc;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.landing__band-track { display: flex; gap: 0; width: max-content; animation: marquee 38s linear infinite; }
+[dir='rtl'] .landing__band-item { direction: rtl; }
+.landing__band-item { display: inline-flex; align-items: center; gap: 28px; padding-inline: 14px; font: 800 20px/1 var(--landing-display); white-space: nowrap; }
+.landing__band-item::after { content: ''; width: 9px; height: 9px; border-radius: 3px; background: linear-gradient(135deg, #f2c14e, #ee8a54); transform: rotate(45deg); }
+
+@keyframes blueprint-in { from { opacity: 0; transform: scale(0.96); } }
+@keyframes chip-in { from { opacity: 0; transform: translateY(10px) scale(0.92); } }
+@keyframes dim-draw { to { stroke-dashoffset: 0; } }
+@keyframes aurora { to { transform: translate(6%, -4%) rotate(8deg); } }
+@keyframes marquee { to { transform: translateX(-50%); } }
+@keyframes tour-pulse { 50% { transform: scale(1.6); opacity: 0.5; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .landing__blueprint, .landing__chip, .landing__chip::before, .landing__start::after, .landing::before, .landing__band-track, .landing__controls { animation: none; }
+  .landing__glow { display: none; }
+  .landing__dim-line { stroke-dashoffset: 0; }
+  .landing__dims-layer--on .landing__dim-line { animation: none; }
+}

@@ -9,10 +9,11 @@ import { ENTRY_POINTS } from './entryPoints.js';
 
 export const START_FOOTNOTE = 'Designs are illustrative previews and are not manufacturing drawings.';
 
-function presetPicker(language) {
+function presetPicker(language, presetId) {
   const select = el('select', { className: 'entry-card__select', attrs: { id: 'entry-preset', lang: language, dir: 'auto' } },
     PRESETS.map((preset) => el('option', { text: presetLabel(preset, language), attrs: { value: preset.id } })));
   select.dataset.testid = 'entry-preset';
+  if (presetId && PRESETS.some((preset) => preset.id === presetId)) select.value = presetId; // from a landing card
   const label = el('label', { className: 'entry-card__field', attrs: { for: 'entry-preset' } }, [
     el('span', { text: 'Template' }),
     select,
@@ -20,14 +21,14 @@ function presetPicker(language) {
   return { label, select };
 }
 
-export function mountStartScreen({ onChoose, session = null, getLanguage = () => 'he' }) {
+export function mountStartScreen({ onChoose, session = null, getLanguage = () => 'he', presetId = null }) {
   const cards = ENTRY_POINTS.map((entry) => {
     const action = el('button', { className: 'btn', attrs: { type: 'button' } }, [
       document.createTextNode(`${entry.action} `),
       icon('arrow', { size: 18 }),
     ]);
     action.dataset.testid = `entry-${entry.id}`;
-    const picker = entry.choosesPreset ? presetPicker(getLanguage()) : null;
+    const picker = entry.choosesPreset ? presetPicker(getLanguage(), presetId) : null;
     const card = el('article', { className: 'entry-card' }, [
       el('span', { className: 'entry-card__icon' }, [icon(entry.icon, { size: 24 })]),
       el('h2', { className: 'entry-card__title', text: entry.title }),

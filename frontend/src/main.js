@@ -5,12 +5,18 @@ import '@fontsource/dm-sans/400.css';
 import '@fontsource/dm-sans/500.css';
 import '@fontsource/dm-sans/600.css';
 import '@fontsource/dm-sans/700.css';
+// Rubik (Hebrew): the landing page's display and body type; Bricolage has no Hebrew glyphs.
+import '@fontsource/rubik/hebrew-400.css';
+import '@fontsource/rubik/hebrew-500.css';
+import '@fontsource/rubik/hebrew-800.css';
+import '@fontsource/rubik/hebrew-900.css';
 import {
   applyProposal, createSavedDesign, getCatalog, getDefaultDesign, getHealth, getSavedDesign, sendChat, updateSavedDesign,
 } from './api/client.js';
 import { createStore } from './state/store.js';
 import { createUnsavedTracker } from './state/unsaved.js';
 import { createTour } from './tour/tour.js';
+import { landingSeen, mountLanding } from './landing/landing.js';
 import { tourStrings } from './tour/steps.js';
 import { PRESETS, buildPreset } from './domain/presets.js';
 import { PRESET_STRINGS, createPresetsDialog } from './entry/presetsDialog.js';
@@ -291,9 +297,11 @@ async function boot() {
     tour.startIfFirstVisit();
     return; // reopened from a link: straight into the editor
   }
-  mountStartScreen({
+  // The opening page comes first (once per session); its template cards preselect the start screen.
+  const showStart = (presetId = null) => mountStartScreen({
     session: auth,
     getLanguage: language.get,
+    presetId,
     onChoose: (entry, presetId) => {
       // The basic wardrobe is already loaded (revision 1); only its room is added.
       if (presetId === 'basic') store.setBackdrop(PRESETS[0].backdrop);
@@ -306,6 +314,8 @@ async function boot() {
       tour.startIfFirstVisit(); // focus returns here when the tour ends
     },
   });
+  if (landingSeen()) showStart();
+  else mountLanding({ catalog, getLanguage: language.get, onStart: showStart });
 }
 
 boot().catch(() => {

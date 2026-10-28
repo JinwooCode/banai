@@ -1,13 +1,21 @@
 import { test as base, expect } from '@playwright/test';
 
+/** Mark the first-visit tour and the opening page as seen, so they don't cover what a test checks. */
+export async function skipIntros(page, { tour = true, landing = true } = {}) {
+  if (tour) await page.addInitScript(() => { try { localStorage.setItem('banai.tour.v1', 'done'); } catch { /* blocked */ } });
+  if (landing) await page.addInitScript(() => { try { sessionStorage.setItem('banai.landing.v1', 'seen'); } catch { /* blocked */ } });
+}
+
 // Every E2E test fails on uncaught page errors or console errors. A test that provokes an
 // expected HTTP error can allow exactly that console line via `test.use({ allowedConsoleErrors })`.
 export const test = base.extend({
   allowedConsoleErrors: [[], { option: true }],
   // The first-visit tour would cover the page: mark it as seen, except in the tour's own tests.
   showTour: [false, { option: true }],
-  page: async ({ page, allowedConsoleErrors, showTour }, use) => {
-    if (!showTour) await page.addInitScript(() => { try { localStorage.setItem('banai.tour.v1', 'done'); } catch { /* blocked */ } });
+  // The opening page comes before the start screen: skip it, except in its own tests.
+  showLanding: [false, { option: true }],
+  page: async ({ page, allowedConsoleErrors, showTour, showLanding }, use) => {
+    await skipIntros(page, { tour: !showTour, landing: !showLanding });
     const problems = [];
     page.on('pageerror', (error) => problems.push(`pageerror: ${error.message}`));
     page.on('console', (message) => {

@@ -1,4 +1,4 @@
-import { test, expect, openDesigner, openDesignerLoggedIn } from './fixtures.js';
+import { test, expect, openDesigner, openDesignerLoggedIn, skipIntros } from './fixtures.js';
 
 // Accounts live in the E2E backend's memory. The start screen asks for a login before the designer.
 test.describe('accounts', () => {
@@ -44,6 +44,7 @@ test.describe('accounts', () => {
     test('a wrong password and a taken email are refused with a message', async ({ page, context }) => {
       const { email } = await openDesignerLoggedIn(page);
       const other = await context.browser().newPage(); // a fresh browser profile: logged out
+      await skipIntros(other);
       await other.goto(page.url().split('#')[0]);
       const start = other.getByTestId('start-screen');
       await start.getByTestId('auth-email').fill(email);
